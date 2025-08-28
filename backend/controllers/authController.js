@@ -1,8 +1,12 @@
-import { User } from "../models/UserModel";
-import bcrypt from "bcryptjs";
+import { User } from "../models/UserModel.js";
+import bcryptjs from "bcryptjs";
+import { generateTokenAndSetCookies } from "../utils/generateTokenAndSetCookies.js";
 
 export const signup = async (req, res) => {
+    console.log("HI");
+
     const { email, password, name } = req.body;
+
     try {
         if (!email || !password || !name) {
             if (!email) {
@@ -28,16 +32,14 @@ export const signup = async (req, res) => {
             {
                 email,
                 password: hashedPassword,
-                name,
-                verificationToken,
-                verificationTokenExpiresAt: Date.now() + 24 * 3600 * 1000 //24 hours
+                username: name,
             }
         )
 
         await user.save() //adding entry in db
 
         //jwt 
-        generateTokenAndSetCookie(res, user._id)
+        generateTokenAndSetCookies(res, user._id)
 
 
 
@@ -52,6 +54,8 @@ export const signup = async (req, res) => {
 
 
     } catch (error) {
+        console.log("Error : ", error.message);
+
         res.status(400).json({ success: false, message: error.message })
     }
 }
@@ -70,7 +74,7 @@ export const login = async (req, res) => {
             return res.status(400).json({ success: false, message: " Invalid Credentials" })
         }
 
-        generateTokenAndSetCookie(res, user._id)
+        generateTokenAndSetCookies(res, user._id)
 
         user.lastLogin = new Date()
 
@@ -86,6 +90,23 @@ export const login = async (req, res) => {
         })
     } catch (error) {
         console.log("Error in Login", error);
+        res.status(400).json({ success: false, message: error.message })
+
+    }
+}
+export const checkAuth = async (req, res) => {
+    try {
+        const userId = req.userId
+        const user = await User.findById(userId).select("-password")
+
+        if (!user) return res.status(400).json({ success: false, message: "User not found" })
+
+        res.status(200).json({
+            success: true,
+            user
+        })
+    } catch (error) {
+        console.log("Error in checkAuth", error);
         res.status(400).json({ success: false, message: error.message })
 
     }

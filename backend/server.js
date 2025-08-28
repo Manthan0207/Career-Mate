@@ -1,8 +1,9 @@
 import cookieParser from 'cookie-parser'
 import dotenv from 'dotenv'
 import express from 'express'
-import authRouters from './routes/authRoutes'
-import { connectDatabase } from './db/connectDB'
+import authRouter from './routes/authRoutes.js'
+import { connectDatabase } from './db/connectDB.js'
+import cors from 'cors'
 
 
 const app = express()
@@ -16,7 +17,7 @@ app.use(cors({
 app.use(cookieParser())
 app.use(express.json())
 
-app.use('api/auth', authRouters)
+app.use('/api/auth', authRouter)
 
 
 app.listen(3000, () => {
